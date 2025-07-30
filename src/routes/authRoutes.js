@@ -6,25 +6,32 @@ const router = express.Router();
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
-router.get('/github/callback',
-    passport.authenticate('github', { failureRedirect: '/login' }),
-    (req, res) => {
-        try {
-            const token = jwt.sign(
-                { id: req.user._id, username: req.user.username },
-                process.env.JWT_SECRET,
-                { expiresIn: '1h' }
-            );
+// GitHub callback
+router.get(
+  '/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  (req, res) => {
+    try {
+      const token = jwt.sign(
+        { id: req.user._id, username: req.user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
 
-            // Send token in query params to frontend
-            res.redirect(`http://localhost:5173/?token=${token}`);
-        } catch (error) {
-            console.error("Error generating JWT token:", error);
-            res.redirect('http://localhost:5173/?error=auth_failed');
-        }
+      // Set token as HTTP-only cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: 3600000, // 1 hour
+      });
+
+      res.redirect('http://localhost:5173');
+    } catch (err) {
+      res.status(500).json({ error: 'Token generation failed' });
     }
+  }
 );
-
 
 router.get('/user', (req, res) => {
     if (req.isAuthenticated()) {
@@ -44,7 +51,7 @@ router.get('/logout', (req, res) => {
         req.session.destroy(() => {
             res.clearCookie('connect.sid'); // clear session cookie
             res.redirect("http://localhost:5173");
-            res.status(200).json({ message: "Logged out successfully" });
+            // res.status(200).json({ message: "Logged out successfully" });
         });
     });
 });
