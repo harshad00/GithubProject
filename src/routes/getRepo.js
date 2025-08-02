@@ -5,6 +5,7 @@ import { authenticate } from "../middleware/authMiddleware.js";
 const router = Router();
 
 // GET /api/github/commits?username=USER&repo=REPO[&tzOffset=MINUTES]
-router.get("/commits", authenticate , getYesterdayCommits);
+router.get("/commits",  getYesterdayCommits);
+
 
 export default router;
