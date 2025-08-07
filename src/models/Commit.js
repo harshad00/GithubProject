@@ -9,23 +9,25 @@ const fileSchema = new mongoose.Schema({
   patch: String,
 }, { _id: false });
 
-const commitSchema = new mongoose.Schema({
-  sha: { type: String, required: true, unique: true },
+const singleCommitSchema = new mongoose.Schema({
+  sha: { type: String, required: true },
   message: String,
   author: String,
   date: Date,
   html_url: String,
   files: [fileSchema],
-  username: String,
-  repo: String,
-  fetchedAt: { type: Date, default: Date.now },
+}, { _id: false });
 
-  // Reference to the authenticated user who fetched this
+const commit = new mongoose.Schema({
+  repo: { type: String, required: true },
+  username: { type: String, required: true },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Make sure you have a User model defined
+    ref: "User",
     required: true,
   },
+  commits: [singleCommitSchema],
+  fetchedAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model("Commit", commitSchema);
+export default mongoose.model("Commit", commit);

@@ -6,6 +6,7 @@ import passport from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import github from './routes/getRepo.js';
 import session from 'express-session';
+import useralldata from './routes/useralldata.js';
 
 dotenv.config();
 const app = express();
@@ -44,6 +45,7 @@ app.use(passport.session());
 // Routes
 app.use('/auth', authRoutes);
 app.use("/api/github", github);
+app.use("/api/user", useralldata);
 app.use("/test", testRouter);
 
 export { app };

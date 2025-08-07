@@ -1,8 +1,10 @@
 import { yesterdayRangeISO } from "../utils/date.js";
 import { fetchCommitsFromGitHub } from "../services/github.js";
 import Commit from "../models/Commit.js";
+
 export async function getYesterdayCommits(req, res) {
-     const userId = req.user?.id;
+  const userId = req.user?.id;
+
   try {
     const { username, repo, tzOffset } = req.query;
 
@@ -11,9 +13,8 @@ export async function getYesterdayCommits(req, res) {
     }
 
     const tzOffsetMinutes = Number.isFinite(Number(tzOffset)) ? Number(tzOffset) : 0;
-
     const { since, until, dateLabel } = yesterdayRangeISO(tzOffsetMinutes);
-
+    console.log("Fetching commits for:", { username, repo, since, until, tzOffset });
     const commits = await fetchCommitsFromGitHub({
       username,
       repo,
@@ -21,39 +22,46 @@ export async function getYesterdayCommits(req, res) {
       until,
       token: process.env.GITHUB_TOKEN || undefined
     });
+    console.log(" THIS IS MY COMMIT:", commits);
+    
 
     if (!commits.length) {
-      return res.status(200).json({
+      return res.status(404).json({
         date: dateLabel,
         message: "No commits found for yesterday.",
         commits: []
       });
-      }
-
-    // Save commits to MongoDB
-    for (const c of commits) {
-      try {
-        await Commit.updateOne(
-          { sha: c.sha }, // prevent duplicates
-          {
-            ...c,
-            username,
-            userId: userId,
-            repo,
-            fetchedAt: new Date()
-          },
-          { upsert: true } // insert if not exists
-        );
-      } catch (dbErr) {
-        console.error(`DB error for commit ${c.sha}:`, dbErr.message);
-      }
     }
+
+    // Step 1: Find existing document
+    let commitDoc = await Commit.findOne({ userId, username, repo });
+
+    if (!commitDoc) {
+      // Step 2: Create new document
+      commitDoc = new Commit({
+        userId,
+        username,
+        repo,
+        commits,
+        fetchedAt: new Date(),
+      });
+    } else {
+      
+      // Step 3: Add only new commits (skip duplicates)
+      const existingShas = new Set(commitDoc.commits.map(c => c.sha));
+      const newCommits = commits.filter(c => !existingShas.has(c.sha));
+      commitDoc.commits.push(...newCommits);
+      commitDoc.fetchedAt = new Date(); // update fetch time
+    }
+
+    await commitDoc.save();
 
     return res.status(200).json({
       date: dateLabel,
       count: commits.length,
       commits
     });
+
   } catch (err) {
     console.error(err);
     return res.status(502).json({ message: "Failed to fetch commits from GitHub" });
