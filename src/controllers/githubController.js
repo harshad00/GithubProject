@@ -14,7 +14,9 @@ export async function getYesterdayCommits(req, res) {
 
     const tzOffsetMinutes = Number.isFinite(Number(tzOffset)) ? Number(tzOffset) : 0;
     const { since, until, dateLabel } = yesterdayRangeISO(tzOffsetMinutes);
+
     console.log("Fetching commits for:", { username, repo, since, until, tzOffset });
+
     const commits = await fetchCommitsFromGitHub({
       username,
       repo,
@@ -22,16 +24,8 @@ export async function getYesterdayCommits(req, res) {
       until,
       token: process.env.GITHUB_TOKEN || undefined
     });
-    console.log(" THIS IS MY COMMIT:", commits);
-    
 
-    if (!commits.length) {
-      return res.status(404).json({
-        date: dateLabel,
-        message: "No commits found for yesterday.",
-        commits: []
-      });
-    }
+    console.log("THIS IS MY COMMIT:", commits);
 
     // Step 1: Find existing document
     let commitDoc = await Commit.findOne({ userId, username, repo });
@@ -46,12 +40,11 @@ export async function getYesterdayCommits(req, res) {
         fetchedAt: new Date(),
       });
     } else {
-      
       // Step 3: Add only new commits (skip duplicates)
       const existingShas = new Set(commitDoc.commits.map(c => c.sha));
       const newCommits = commits.filter(c => !existingShas.has(c.sha));
       commitDoc.commits.push(...newCommits);
-      commitDoc.fetchedAt = new Date(); // update fetch time
+      commitDoc.fetchedAt = new Date();
     }
 
     await commitDoc.save();
@@ -64,6 +57,18 @@ export async function getYesterdayCommits(req, res) {
 
   } catch (err) {
     console.error(err);
+
+    // If error was thrown for "No commits found" — return 404
+    if (err.message.startsWith("No commits found")) {
+      return res.status(404).json({
+        date: yesterdayRangeISO(
+          Number.isFinite(Number(req.query.tzOffset)) ? Number(req.query.tzOffset) : 0
+        ).dateLabel,
+        message: "No commits found for yesterday.",
+        commits: []
+      });
+    }
+
     return res.status(502).json({ message: "Failed to fetch commits from GitHub" });
   }
 }

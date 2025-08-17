@@ -16,11 +16,22 @@ export async function fetchCommitsFromGitHub({ username, repo, since, until, tok
 
   const commits = await listResp.json();
 
+  // ✅ Check if no commits found
+  if (!Array.isArray(commits) || commits.length === 0) {
+    throw new Error(`No commits found in ${repo} by ${username} for the given date range.`);
+  }
+
   const fullCommits = await Promise.all(
     commits.map(async (c) => {
       const sha = c.sha;
       const commitURL = `${baseURL}/commits/${sha}`;
       const commitResp = await fetch(commitURL, { headers });
+
+      if (!commitResp.ok) {
+        const text = await commitResp.text().catch(() => "");
+        throw new Error(`Error fetching commit details for ${sha}: ${text || commitResp.statusText}`);
+      }
+
       const commitData = await commitResp.json();
 
       return {
