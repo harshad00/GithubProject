@@ -17,7 +17,7 @@ dotenv.config();
 const app = express();
 
 // ---------- CORS ----------
-const allowedOrigins = [process.env.FRONTEND_URL];
+const allowedOrigins = [process.env.FRONTEND_URL || 'gh-trackr-fornt-end.vercel.app'];
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
