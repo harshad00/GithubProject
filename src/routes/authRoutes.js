@@ -30,7 +30,7 @@ router.get(
       });
       
 
-      res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
+      res.redirect(process.env.FRONTEND_URL );
     }
     );
 
