@@ -8,7 +8,7 @@ router.get('/github', passport.authenticate('github', { scope: ['user:email'] })
 
 router.get(
   '/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
+  passport.authenticate('github', { failureRedirect: '/' }),
   (req, res) => {
     // User is automatically stored in session
     // Log in the user in the session
