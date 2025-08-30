@@ -6,11 +6,11 @@ const router = express.Router();
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
-// GitHub callback
 router.get(
   '/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   (req, res) => {
+    // User is automatically stored in session
     // Log in the user in the session
     req.login(req.user, (err) => {
       if (err) return res.status(500).json({ error: 'Login failed' });
@@ -28,25 +28,20 @@ router.get(
         sameSite: 'Lax',
         maxAge: 3600000,
       });
+      
 
-      res.redirect('http://localhost:5173');
-    });
-  }
-);
-
-
-router.get("/user", (req, res) => {
-  try {
-    const token = req.cookies.token; // <-- make sure cookie-parser middleware is used!
-    if (!token) {
-      return res.status(401).json({ user: null });
+      res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
     }
+    );
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.status(200).json({ user: decoded });
-  } catch (err) {
-    console.error("Error in /auth/user:", err.message);
-    res.status(500).json({ user: null, error: "Failed to fetch user" });
+  });
+  
+// Get logged in user
+router.get('/user', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.status(200).json({ user: req.user });
+  } else {
+    res.status(401).json({ user: null });
   }
 });
 

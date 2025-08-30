@@ -1,53 +1,70 @@
-import cors from 'cors';
 import express from 'express';
-import testRouter from './routes/test.js';
 import dotenv from 'dotenv';
+import cors from 'cors';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import passport from './config/passport.js';
+import cookieParser from 'cookie-parser';
+
+// Import routes
 import authRoutes from './routes/authRoutes.js';
 import github from './routes/getRepo.js';
-import session from 'express-session';
 import useralldata from './routes/useralldata.js';
 import summar from './routes/summar.js';
+import testRouter from './routes/test.js';
 
 dotenv.config();
 const app = express();
 
-// Setup CORS
+// ---------- CORS ----------
 const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
-
 app.use(cors({
-  origin: function (origin, callback) {
+  origin: function(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true // Needed if using cookies or sessions
+  credentials: true
 }));
 
-// Body parsers
+// ---------- Body Parsers ----------
 app.use(express.json({ limit: '16kb' }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true, limit: '16kb' }));
+app.use(express.static('public'));
+app.use(cookieParser());
 
-// SESSION MUST BE BEFORE passport.session()
+// ---------- SESSION ----------
 app.use(session({
-  secret: process.env.SESSION_SECRET || "defaultsecret",
+  secret: process.env.SESSION_SECRET || 'defaultsecret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false} // true if using HTTPS
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions'
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // true on Render HTTPS
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 // 1 hour
+  }
 }));
 
-// Initialize Passport
+// ---------- PASSPORT ----------
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// ---------- ROUTES ----------
 app.use('/auth', authRoutes);
-app.use("/api/github", github);
-app.use("/api/user", useralldata);
-app.use("/api/summar",summar);
-app.use("/test", testRouter);
+app.use('/api/github', github);
+app.use('/api/user', useralldata);
+app.use('/api/summar', summar);
+app.use('/test', testRouter);
+
+// ---------- DEFAULT ROUTE ----------
+app.get('/', (req, res) => {
+  res.send('Backend is running');
+});
 
 export { app };
