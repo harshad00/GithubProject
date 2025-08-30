@@ -29,7 +29,7 @@ router.get(
       });
 
 
-      res.redirect(process.env.FRONTEND_URL);
+      res.redirect('https://gh-trackr-fornt-end.vercel.app');
     }
     );
 
