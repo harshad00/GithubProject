@@ -4,36 +4,37 @@ import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
+// GitHub login
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
+// GitHub callback
 router.get(
   '/github/callback',
   passport.authenticate('github', { failureRedirect: '/' }),
   (req, res) => {
-    // User is automatically stored in session
-    // Log in the user in the session
     req.login(req.user, (err) => {
       if (err) return res.status(500).json({ error: 'Login failed' });
 
-      // Optionally, create JWT as well
+      // Create JWT
       const token = jwt.sign(
         { id: req.user._id, username: req.user.username },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
+
+      // Set cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // only HTTPS in prod
+        secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-        maxAge: 1000 * 60 * 60, // 1 hour
+        maxAge: 1000 * 60 * 60,
       });
 
-
-      res.redirect('https://gh-trackr-fornt-end.vercel.app');
-    }
-    );
-
-  });
+      // ✅ Redirect to frontend
+      res.redirect(process.env.FRONTEND_URL);
+    });
+  }
+);
 
 // Get logged in user
 router.get('/user', (req, res) => {
@@ -44,20 +45,18 @@ router.get('/user', (req, res) => {
   }
 });
 
-// Logout route
+// Logout
 router.get('/logout', (req, res) => {
   req.logout((err) => {
     if (err) {
       return res.status(500).json({ message: "Error logging out", error: err });
     }
-
     req.session.destroy(() => {
-      res.clearCookie('connect.sid'); // clear session cookie
-      res.redirect("http://localhost:5173");
-      // res.status(200).json({ message: "Logged out successfully" });
+      res.clearCookie('connect.sid');
+      // ✅ Redirect to frontend instead of hardcoded localhost
+      res.redirect(process.env.FRONTEND_URL);
     });
   });
 });
-
 
 export default router;
