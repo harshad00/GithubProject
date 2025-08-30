@@ -5,7 +5,7 @@ import CommitSummary1 from "../models/CommitSummary1.js";
     
     try {
         // 🔹 Fetch commit summaries for the specified repo
-        const summaries = await CommitSummary1.find({ repo });
+        const summaries = await CommitSummary1.find({ repo: { $regex: new RegExp(`^${repo}$`, "i") } });
     
         if (!summaries || summaries.length === 0) {
         return res.status(404).json({ message: "No commit summaries found for this repository" });
