@@ -21,21 +21,20 @@ router.get(
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
-
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Lax',
-        maxAge: 3600000,
+        secure: process.env.NODE_ENV === 'production', // only HTTPS in prod
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        maxAge: 1000 * 60 * 60, // 1 hour
       });
-      
 
-      res.redirect(process.env.FRONTEND_URL );
+
+      res.redirect(process.env.FRONTEND_URL);
     }
     );
 
   });
-  
+
 // Get logged in user
 router.get('/user', (req, res) => {
   if (req.isAuthenticated()) {
@@ -47,17 +46,17 @@ router.get('/user', (req, res) => {
 
 // Logout route
 router.get('/logout', (req, res) => {
-    req.logout((err) => {
-        if (err) {
-            return res.status(500).json({ message: "Error logging out", error: err });
-        }
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ message: "Error logging out", error: err });
+    }
 
-        req.session.destroy(() => {
-            res.clearCookie('connect.sid'); // clear session cookie
-            res.redirect("http://localhost:5173");
-            // res.status(200).json({ message: "Logged out successfully" });
-        });
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid'); // clear session cookie
+      res.redirect("http://localhost:5173");
+      // res.status(200).json({ message: "Logged out successfully" });
     });
+  });
 });
 
 
