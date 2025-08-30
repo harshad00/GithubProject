@@ -46,8 +46,8 @@ app.use(session({
   }),
   cookie: {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // only true on HTTPS
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // none for prod, lax for localhost
+  secure: false,       // HTTP in dev
+  sameSite: 'lax',     // works for localhost
   maxAge: 1000 * 60 * 60
 }
 }));
