@@ -36,7 +36,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "defaultsecret",
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // true if using HTTPS
+  cookie: { secure: false} // true if using HTTPS
 }));
 
 // Initialize Passport
