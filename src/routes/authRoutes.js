@@ -35,15 +35,18 @@ router.get(
 );
 
 
-router.get('/user', (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ user: null });
-
+router.get("/user", (req, res) => {
   try {
+    const token = req.cookies.token; // <-- make sure cookie-parser middleware is used!
+    if (!token) {
+      return res.status(401).json({ user: null });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     res.status(200).json({ user: decoded });
   } catch (err) {
-    res.status(401).json({ user: null });
+    console.error("Error in /auth/user:", err.message);
+    res.status(500).json({ user: null, error: "Failed to fetch user" });
   }
 });
 
