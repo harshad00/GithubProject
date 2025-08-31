@@ -22,7 +22,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 // ---------- CORS ----------
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://gh-trackr-fornt-end.vercel.app'
+  process.env.FRONTEND_URL || 'https://gh-trackr-fornt-end-j7zb.vercel.app'
 ];
 
 app.use(cors({
