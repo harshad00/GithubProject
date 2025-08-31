@@ -26,16 +26,16 @@ export const summaryofCommits = async (req, res) => {
 
     // ✅ CASE 1: If summary already exists → check for new commits
     if (checkedCommitsSummary) {
-      console.log("Summary already exists for this commit ID:", _id);
+      // console.log("Summary already exists for this commit ID:", _id);
 
       // Find latest version for this repo + commitId
       const latestSummary = await CommitSummary.findOne({ commitId: _id })
         .sort({ version: -1 }); // get highest version
-      console.log("Latest summary found:", latestSummary);
+      // console.log("Latest summary found:", latestSummary);
       
 
       if (latestSummary.totalCommits !== commits.length) {
-        console.log("New commits found, generating new versioned summary");
+        // console.log("New commits found, generating new versioned summary");
 
         const newCommits = commits.slice(latestSummary.totalCommits);
 
@@ -95,7 +95,7 @@ Please provide a concise structured summary of these commits.
             version: latestSummary.version + 1,
           });
 
-          console.log("New summary to be saved:", newSummary);
+          // console.log("New summary to be saved:", newSummary);
 
           await newSummary.save();
 
@@ -111,7 +111,7 @@ Please provide a concise structured summary of these commits.
     }
 
     // ✅ CASE 2: First time → create initial summary
-    console.log("No summary exists yet, generating first-time summary...");
+    // console.log("No summary exists yet, generating first-time summary...");
 
     const initialPrompt = `
 You are an AI assistant that summarizes GitHub commit history.

@@ -15,7 +15,7 @@ export async function getYesterdayCommits(req, res) {
     const tzOffsetMinutes = Number.isFinite(Number(tzOffset)) ? Number(tzOffset) : 0;
     const { since, until, dateLabel } = yesterdayRangeISO(tzOffsetMinutes);
 
-    console.log("Fetching commits for:", { username, repo, since, until, tzOffset });
+    // console.log("Fetching commits for:", { username, repo, since, until, tzOffset });
 
     const commits = await fetchCommitsFromGitHub({
       username,
@@ -25,7 +25,7 @@ export async function getYesterdayCommits(req, res) {
       token: process.env.GITHUB_TOKEN || undefined
     });
 
-    console.log("THIS IS MY COMMIT:", commits);
+    // console.log("THIS IS MY COMMIT:", commits);
 
     // Step 1: Find existing document
     let commitDoc = await Commit.findOne({ userId, username, repo });

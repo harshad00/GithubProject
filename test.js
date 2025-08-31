@@ -11,8 +11,8 @@ const dummyUser = {
 };
 
 const token = generateToken(dummyUser);
-console.log('Generated Token:', token);
+// console.log('Generated Token:', token);
 
 // Optional: Verify the token
 const decoded = verifyToken(token);
-console.log('Decoded Token:', decoded);
+// console.log('Decoded Token:', decoded);

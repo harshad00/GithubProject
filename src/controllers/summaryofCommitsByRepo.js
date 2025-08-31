@@ -11,7 +11,7 @@ import CommitSummary1 from "../models/CommitSummary1.js";
         return res.status(404).json({ message: "No commit summaries found for this repository" });
         }
     
-        console.log("Fetched commit summaries:", summaries);
+        // console.log("Fetched commit summaries:", summaries);
     
         res.status(200).json(summaries);
     } catch (error) {
